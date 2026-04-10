@@ -35,8 +35,21 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-
         String servletPath = request.getServletPath();
+        
+        // 添加日志
+        System.out.println("========== 拦截器日志 ==========");
+        System.out.println("请求路径: " + servletPath);
+        System.out.println("handler类型: " + handler.getClass().getName());
+        System.out.println("是否是HandlerMethod: " + (handler instanceof HandlerMethod));
+        System.out.println("================================");
+        
+        // 显式放行前台页面路径（不需要登录）
+        if(servletPath.startsWith("/front/")) {
+            System.out.println("放行前台路径: " + servletPath);
+            return true;
+        }
+        
         if("/dictionary/page".equals(request.getServletPath())  || "/file/upload".equals(request.getServletPath()) || "/yonghu/register".equals(request.getServletPath()) ){//请求路径是字典表或者文件上传 直接放行
             return true;
         }

@@ -64,24 +64,24 @@
 					name: "login"
 				});
 			},
-      			onIndexTap(){
-      				window.location.href = `${this.$base.indexUrl}`
-    			},
+      onIndexTap(){
+        window.location.href = `${this.$base.indexUrl}`
+      },
 			setHeaderStyle() {
-			  this.$nextTick(()=>{
-			    document.querySelectorAll('.navbar .right-menu .logout').forEach(el=>{
-			      el.addEventListener("mouseenter", e => {
-			        e.stopPropagation()
-			        el.style.backgroundColor = this.heads.headLogoutFontHoverBgColor
-					el.style.color = this.heads.headLogoutFontHoverColor
-			      })
-			      el.addEventListener("mouseleave", e => {
-			        e.stopPropagation()
-			        el.style.backgroundColor = "transparent"
-					el.style.color = this.heads.headLogoutFontColor
-			      })
-			    })
-			  })
+        this.$nextTick(()=>{
+          document.querySelectorAll('.navbar .right-menu .logout').forEach(el=>{
+            el.addEventListener("mouseenter", e => {
+            e.stopPropagation()
+             el.style.backgroundColor = this.heads.headLogoutFontHoverBgColor
+		el.style.color = this.heads.headLogoutFontHoverColor
+     })
+     el.addEventListener("mouseleave", e => {
+       e.stopPropagation()
+       el.style.backgroundColor = "transparent"
+		el.style.color = this.heads.headLogoutFontColor
+     })
+   })
+ })
 			},
 		}
 	};

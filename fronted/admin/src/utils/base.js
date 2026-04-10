@@ -4,7 +4,8 @@ const base = {
             url : "http://localhost:8080/minsuguanliw/",
             name: "minsuguanliw",
             // 退出到首页链接
-            indexUrl: '/front/index.html'
+            indexUrl: 'http://localhost:8080/minsuguanliw/front/index.html'
+
         };
     },
     getProjectName(){

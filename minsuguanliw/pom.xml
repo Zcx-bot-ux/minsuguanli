@@ -184,10 +184,10 @@
                 <excludes>
                     <exclude>**/node_modules/**</exclude>
                     <exclude>**/admin/**</exclude>
-                    <exclude>**/front/**</exclude>
                 </excludes>
             </resource>
         </resources>
+
     </build>
 
 </project>
