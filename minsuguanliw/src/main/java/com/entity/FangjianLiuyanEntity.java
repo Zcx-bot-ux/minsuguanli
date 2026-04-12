@@ -123,6 +123,18 @@ public class FangjianLiuyanEntity<T> implements Serializable {
     private String orderNo;
 
 
+    /**
+     * 评分
+     */
+    @TableField(value = "pingfen_number")
+    private Integer pingfenNumber;
+
+    /**
+     * 留言类型 (0-房间留言, 1-订单评价)
+     */
+    @TableField(value = "liuyan_type")
+    private Integer liuyanType;
+
 	/**
 	 * 设置：主键
 	 */
@@ -238,6 +250,34 @@ public class FangjianLiuyanEntity<T> implements Serializable {
 	 */
     public void setOrderNo(String orderNo) {
         this.orderNo = orderNo;
+    }
+
+    /**
+     * 设置：评分
+     */
+    public Integer getPingfenNumber() {
+        return pingfenNumber;
+    }
+    
+    /**
+     * 获取：评分
+     */
+    public void setPingfenNumber(Integer pingfenNumber) {
+        this.pingfenNumber = pingfenNumber;
+    }
+
+    /**
+     * 设置：留言类型
+     */
+    public Integer getLiuyanType() {
+        return liuyanType;
+    }
+    
+    /**
+     * 获取：留言类型
+     */
+    public void setLiuyanType(Integer liuyanType) {
+        this.liuyanType = liuyanType;
     }
 
     @Override

@@ -58,7 +58,7 @@ public class TokenServiceImpl extends ServiceImpl<TokenDao, TokenEntity> impleme
 		String token = CommonUtil.getRandomString(32);
 		Calendar cal = Calendar.getInstance();   
     	cal.setTime(new Date());   
-    	cal.add(Calendar.HOUR_OF_DAY, 1);
+    	cal.add(Calendar.HOUR_OF_DAY, 4);
 		if(tokenEntity!=null) {
 			tokenEntity.setToken(token);
 			tokenEntity.setExpiratedtime(cal.getTime());

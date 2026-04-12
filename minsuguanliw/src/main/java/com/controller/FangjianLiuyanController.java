@@ -306,5 +306,28 @@ public class FangjianLiuyanController {
         return R.ok();
         }
 
+    /**
+     * 房间留言（无评分）
+     */
+    @RequestMapping("/roomMessage")
+    public R roomMessage(@RequestParam Map<String, Object> params, HttpServletRequest request){
+        logger.debug("roomMessage方法:,,Controller:{},,params:{}",this.getClass().getName(),params);
 
+        Integer fangjianId = Integer.parseInt((String) params.get("fangjianId"));
+        String messageContent = (String) params.get("messageContent");
+        
+        // 获取当前用户
+        Integer userId = (Integer) request.getSession().getAttribute("userId");
+        
+        FangjianLiuyanEntity liuyan = new FangjianLiuyanEntity();
+        liuyan.setFangjianId(fangjianId);
+        liuyan.setYonghuId(userId);
+        liuyan.setFangjianLiuyanText(messageContent);
+        liuyan.setLiuyanType(0); // 0表示房间留言
+        liuyan.setInsertTime(new Date());
+        liuyan.setCreateTime(new Date());
+        fangjianLiuyanService.insert(liuyan);
+
+        return R.ok();
+    }
 }

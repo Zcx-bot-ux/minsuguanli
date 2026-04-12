@@ -5,11 +5,11 @@
         <div v-if="showFlag">
             <el-form :inline="true" :model="searchForm" class="form-content">
                 <el-row :gutter="20" class="slt" :style="{justifyContent:contents.searchBoxPosition=='1'?'flex-start':contents.searchBoxPosition=='2'?'center':'flex-end'}">
-                 
+
                      <el-form-item :label="contents.inputTitle == 1 ? '房间名称' : ''">
                          <el-input prefix-icon="el-icon-search" v-model="searchForm.fangjianName" placeholder="房间名称" clearable></el-input>
                      </el-form-item>
-                                                         
+
                      <el-form-item :label="contents.inputTitle == 1 ? '房间类型' : ''">
                         <el-select v-model="searchForm.fangjianTypes" placeholder="请选择房间类型">
                             <el-option label="=-请选择-=" value=""></el-option>
@@ -24,7 +24,7 @@
                         </el-select>
                      </el-form-item>
 
-                                
+
 
 
                     <el-form-item>
@@ -195,6 +195,24 @@
                         <template slot-scope="scope">
                             {{scope.row.fangjianClicknum}}
                         </template>
+                    </el-table-column>
+
+                    <!-- 在表格列中添加评分显示 -->
+                    <el-table-column
+                      prop="pingfenNumber"
+                      label="评分"
+                      width="120"
+                      align="center">
+                      <template slot-scope="scope">
+                        <el-rate
+                          v-if="scope.row.pingfenNumber"
+                          v-model="scope.row.pingfenNumber"
+                          disabled
+                          show-score
+                          text-color="#ff9900">
+                        </el-rate>
+                        <span v-else>暂无评分</span>
+                      </template>
                     </el-table-column>
 
                     <el-table-column width="300" :align="contents.tableAlign"
@@ -690,15 +708,15 @@
                     sort: 'id',
                 }
 
-                 
+
                 if (this.searchForm.fangjianName!= '' && this.searchForm.fangjianName!= undefined) {
                     params['fangjianName'] = '%' + this.searchForm.fangjianName + '%'
                 }
-                                                         
+
                 if (this.searchForm.fangjianTypes!= '' && this.searchForm.fangjianTypes!= undefined) {
                     params['fangjianTypes'] = this.searchForm.fangjianTypes
                 }
-                                
+
                 params['fangjianDelete'] = 1// 逻辑删除字段 1 未删除 2 删除
 
 
@@ -817,6 +835,37 @@
             fangjianUploadError(data){
                 this.$message.error('上传失败');
             },
+            // 房间留言
+            roomMessageHandler(row) {
+                this.roomMessageForm.fangjianId = row.id;
+                this.roomMessageForm.messageContent = '';
+                this.roomMessageVisible = true;
+            },
+            roomMessageSubmit() {
+                let param = {
+                    fangjianId: this.roomMessageForm.fangjianId,
+                    messageContent: this.roomMessageForm.messageContent
+                }
+                this.$http({
+                    url: "fangjianLiuyan/roomMessage",
+                    method: "post",
+                    data: param
+                }).then(({ data }) => {
+                    if (data && data.code === 0) {
+                        this.$message({
+                            message: "留言成功",
+                            type: "success",
+                            duration: 1500,
+                            onClose: () => {
+                                this.roomMessageVisible = false;
+                                this.search();
+                            }
+                        });
+                    } else {
+                        this.$message.error(data.msg);
+                    }
+                });
+            },
         }
     };
 </script>
@@ -839,11 +888,11 @@
       }
     }
   }
-  
+
 
   .el-button+.el-button {
     margin:0;
-  } 
+  }
 
   .tables {
 	& ::v-deep .el-button--success {
@@ -856,7 +905,7 @@
 		border-radius: 4px;
 		background-color: rgba(117, 113, 249, 1);
 	}
-	
+
 	& ::v-deep .el-button--primary {
 		height: 40px;
 		color: #333;
@@ -867,7 +916,7 @@
 		border-radius: 4px;
 		background-color: rgba(102, 204, 255, 1);
 	}
-	
+
 	& ::v-deep .el-button--danger {
 		height: 40px;
 		color: #333;

@@ -400,7 +400,7 @@
                     </div>
                     <div class="comments-area" v-if="fangjianLiuyanDataList.length > 0">
                         <h3 class="title">
-                            留言
+                            留言与评价
                         </h3>
                         <ul class="comments-list">
                             <li class="single-comment" v-for="(item,index) in fangjianLiuyanDataList"
@@ -411,11 +411,24 @@
                                 <div class="content">
                                     <h6 class="name">{{item.yonghuName}}<span class="date" style="float:right">{{item.insertTime}}</span>
                                     </h6>
-                                    <p>{{item.fangjianLiuyanText}}</p>
+                                    <!-- 评分展示 - 仅订单评价显示 -->
+                                    <div v-if="item.pingfenNumber && item.pingfenNumber > 0" class="rating-display" style="margin: 8px 0; padding: 5px 0;">
+                                        <span style="color: #666; font-size: 13px; vertical-align: middle;">评分：</span>
+                                        <span class="stars" style="font-size: 20px; vertical-align: middle; letter-spacing: 2px;">
+                                            <span v-for="n in parseInt(item.pingfenNumber)" :key="'full-'+n" style="color: #ff9900; text-shadow: 0 0 3px #ff9900;">★</span>
+                                            <span v-for="n in (5-parseInt(item.pingfenNumber))" :key="'empty-'+n" style="color: #e0e0e0;">★</span>
+                                        </span>
+                                        <span style="color: #ff6600; font-weight: bold; margin-left: 10px; font-size: 15px; vertical-align: middle;">{{item.pingfenNumber}}分</span>
+                                    </div>
+                                    <!-- 调试信息：显示原始评分值 -->
+                                    <div v-else style="color: #999; font-size: 12px; margin: 5px 0;">
+                                        [调试] 评分值: {{item.pingfenNumber}}
+                                    </div>
+                                    <p style="margin-top: 8px; color: #333; line-height: 1.6; font-size: 14px;">{{item.fangjianLiuyanText}}</p>
                                 </div>
                                 <p v-if="item.replyText != null && item.replyText != ''"
-                                   style="font-size: 10px;color: #959797">
-                                    回复：{{ item.replyText }}</p>
+                                   style="font-size: 12px; color: #666; margin-top: 10px; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #1890ff;">
+                                    <strong>回复：</strong>{{ item.replyText }}</p>
                             </li>
                         </ul>
                     </div>
@@ -609,6 +622,19 @@
             limit: limit,
             fangjianId: vue.detail.id
         }, function (res) {
+            console.log('=== 留言数据调试 ===');
+            console.log('返回数据:', res);
+            if(res.data && res.data.list) {
+                console.log('留言列表:', res.data.list);
+                res.data.list.forEach((item, index) => {
+                    console.log(`留言${index + 1}:`, {
+                        用户: item.yonghuName,
+                        内容: item.fangjianLiuyanText,
+                        评分: item.pingfenNumber,
+                        类型: item.liuyanType
+                    });
+                });
+            }
             vue.fangjianLiuyanDataList = res.data.list;
             // 分页
             laypage.render({

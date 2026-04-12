@@ -459,8 +459,12 @@ public class FangjianOrderController {
         String saveOrderNo = StringUtils.isNotBlank(fangjianOrder.getOrderNo()) ? fangjianOrder.getOrderNo() : String.valueOf(fangjianOrder.getId());
         fangjianLiuyan.setOrderNo(saveOrderNo);
         fangjianLiuyan.setFangjianLiuyanText(commentbackText);
-        // 如果有评分字段，取消下面这行的注释
-        // fangjianLiuyan.setReplyText(fangjianCommentbackPingfenNumber + "星评价"); 
+        // 设置留言类型为订单评价
+        fangjianLiuyan.setLiuyanType(1); // 1表示订单评价
+        // 保存评分（可选）
+        if(fangjianCommentbackPingfenNumber != null) {
+            fangjianLiuyan.setPingfenNumber(fangjianCommentbackPingfenNumber);
+        }
         fangjianLiuyan.setInsertTime(new Date());
         fangjianLiuyan.setCreateTime(new Date());
         fangjianLiuyanService.insert(fangjianLiuyan);

@@ -1,5 +1,6 @@
 package com.entity.model;
 
+import com.baomidou.mybatisplus.annotations.TableField;
 import com.entity.FangjianLiuyanEntity;
 
 import com.baomidou.mybatisplus.annotations.TableName;
@@ -18,8 +19,15 @@ import java.io.Serializable;
 public class FangjianLiuyanModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 评分
+     */
+    private Integer pingfenNumber;
 
-
+    /**
+     * 留言类型
+     */
+    private Integer liuyanType;
 
     /**
      * 主键
@@ -188,4 +196,31 @@ public class FangjianLiuyanModel implements Serializable {
         this.createTime = createTime;
     }
 
+    /**
+     * 获取：评分
+     */
+    public Integer getPingfenNumber() {
+        return pingfenNumber;
     }
+    
+    /**
+     * 设置：评分
+     */
+    public void setPingfenNumber(Integer pingfenNumber) {
+        this.pingfenNumber = pingfenNumber;
+    }
+
+    /**
+     * 获取：留言类型
+     */
+    public Integer getLiuyanType() {
+        return liuyanType;
+    }
+    
+    /**
+     * 设置：留言类型
+     */
+    public void setLiuyanType(Integer liuyanType) {
+        this.liuyanType = liuyanType;
+    }
+}

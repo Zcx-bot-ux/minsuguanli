@@ -88,6 +88,15 @@ public class FangjianLiuyanVO implements Serializable {
     @TableField(value = "create_time")
     private Date createTime;
 
+    /**
+     * 评分
+     */
+    private Integer pingfenNumber;
+
+    /**
+     * 留言类型
+     */
+    private Integer liuyanType;
 
     /**
 	 * 设置：主键
@@ -210,4 +219,31 @@ public class FangjianLiuyanVO implements Serializable {
         this.createTime = createTime;
     }
 
+    /**
+     * 获取：评分
+     */
+    public Integer getPingfenNumber() {
+        return pingfenNumber;
+    }
+    
+    /**
+     * 设置：评分
+     */
+    public void setPingfenNumber(Integer pingfenNumber) {
+        this.pingfenNumber = pingfenNumber;
+    }
+
+    /**
+     * 获取：留言类型
+     */
+    public Integer getLiuyanType() {
+        return liuyanType;
+    }
+    
+    /**
+     * 设置：留言类型
+     */
+    public void setLiuyanType(Integer liuyanType) {
+        this.liuyanType = liuyanType;
+    }
 }

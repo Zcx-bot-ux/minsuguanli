@@ -10,6 +10,8 @@
         ,a.order_id as orderId
         ,a.fangjian_liuyan_text as fangjianLiuyanText
         ,a.reply_text as replyText
+        ,a.pingfen_number as pingfenNumber
+        ,a.liuyan_type as liuyanType
         ,a.insert_time as insertTime
         ,a.update_time as updateTime
         ,a.create_time as createTime

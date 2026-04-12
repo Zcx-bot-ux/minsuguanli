@@ -126,6 +126,23 @@
                             </span>
                         </template>
                     </el-table-column>
+                    <!-- 添加评分展示列 -->
+                    <el-table-column  :sortable="contents.tableSortable" :align="contents.tableAlign"
+                                      prop="pingfenNumber"
+                                      header-align="center"
+                                      label="评分"
+                                      width="150">
+                        <template slot-scope="scope">
+                            <el-rate
+                                v-if="scope.row.pingfenNumber"
+                                v-model="scope.row.pingfenNumber"
+                                disabled
+                                show-score
+                                text-color="#ff9900">
+                            </el-rate>
+                            <span v-else>无评分</span>
+                        </template>
+                    </el-table-column>
                     <el-table-column  :sortable="contents.tableSortable" :align="contents.tableAlign"
                                       prop="replyText"
                                       header-align="center"

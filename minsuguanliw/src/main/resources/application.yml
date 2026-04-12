@@ -19,8 +19,8 @@ spring:
             enabled: true
             additional-paths: src/main/resources/front
             exclude: static/**,upload/**
-            poll-interval: 1000ms
-            quiet-period: 400ms
+            poll-interval: 2000ms
+            quiet-period: 1000ms
 
     servlet:
         multipart:

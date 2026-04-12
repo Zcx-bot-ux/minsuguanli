@@ -218,17 +218,20 @@
         <!-- 添加/修改页面  将父组件的search方法传递给子组件-->
         <add-or-update v-if="addOrUpdateFlag" :parent="this" ref="addOrUpdate"></add-or-update>
 
-        <!-- 评价 -->
-		<el-dialog
-                title="评价"
-                :visible.sync="commentbackVisible"
-                width="30%">
-            <span>评价内容</span>
-            <el-input type="textarea" v-model="commentbackContent"></el-input>
+        <!-- 评价弹窗（只保留这个） -->
+        <el-dialog title="评价" :visible.sync="commentVisible" width="500px">
+            <el-form :model="commentForm" label-width="80px">
+                <el-form-item label="评价内容">
+                    <el-input type="textarea" v-model="commentForm.commentbackText"></el-input>
+                </el-form-item>
+                <el-form-item label="评分">
+                    <el-rate v-model="commentForm.fangjianCommentbackPingfenNumber" :max="5" show-score></el-rate>
+                </el-form-item>
+            </el-form>
             <span slot="footer" class="dialog-footer">
-			<el-button @click="commentbackVisible = false">取 消</el-button>
-			<el-button type="primary" @click="commentback()">确 定</el-button>
-		  </span>
+                <el-button @click="commentVisible = false">取 消</el-button>
+                <el-button type="primary" @click="commentSubmit">确 定</el-button>
+            </span>
         </el-dialog>
 
         <el-dialog title="统计报表" :visible.sync="chartVisiable" width="800">
@@ -312,12 +315,13 @@
             },
 
         //评价
-			//操作数据id
-			commentbackId:null,
-			//评价内容
-			commentbackContent:null,
-			//模态框状态
-			commentbackVisible:false,
+        commentForm: {
+            orderNo: '',
+            commentbackText: '',
+            fangjianCommentbackPingfenNumber: 0, // 评分字段
+        },
+        commentVisible:false,
+
 			//评分
 		    fangjianCommentbackPingfenNumber:0,            };
         },
@@ -886,14 +890,40 @@
                     });
                 });
             },
-
-
-
-
-
-
-
-
+            // 打开评价弹窗
+            commentbackHandler(row) {
+                this.commentForm.orderNo = row.orderNo;
+                this.commentForm.commentbackText = '';
+                this.commentForm.fangjianCommentbackPingfenNumber = 0;
+                this.commentVisible = true;
+            },
+            // 评价提交
+            commentSubmit() {
+                let param = {
+                    orderNo: this.commentForm.orderNo,
+                    commentbackText: this.commentForm.commentbackText,
+                    fangjianCommentbackPingfenNumber: this.commentForm.fangjianCommentbackPingfenNumber
+                }
+                this.$http({
+                    url: "fangjianOrder/commentback",
+                    method: "post",
+                    data: param
+                }).then(({ data }) => {
+                    if (data && data.code === 0) {
+                        this.$message({
+                            message: "评价成功",
+                            type: "success",
+                            duration: 1500,
+                            onClose: () => {
+                                this.commentVisible = false;
+                                this.search();
+                            }
+                        });
+                    } else {
+                        this.$message.error(data.msg);
+                    }
+                });
+            },
 
         }
     };
