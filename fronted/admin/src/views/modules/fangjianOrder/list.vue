@@ -29,7 +29,7 @@
                         </el-select>
                     </el-form-item>
                                                                                                                          
-                    <el-form-item :label="contents.inputTitle == 1 ? '用户姓名' : ''">
+                    <el-form-item :label="contents.inputTitle == 1 ? '用户姓名' : ''" v-if="role == '管理员'">
                         <el-input prefix-icon="el-icon-search" v-model="searchForm.yonghuName" placeholder="用户姓名" clearable></el-input>
                     </el-form-item>
                                                                                                                         

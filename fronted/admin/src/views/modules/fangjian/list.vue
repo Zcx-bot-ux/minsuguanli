@@ -197,24 +197,6 @@
                         </template>
                     </el-table-column>
 
-                    <!-- 在表格列中添加评分显示 -->
-                    <el-table-column
-                      prop="pingfenNumber"
-                      label="评分"
-                      width="120"
-                      align="center">
-                      <template slot-scope="scope">
-                        <el-rate
-                          v-if="scope.row.pingfenNumber"
-                          v-model="scope.row.pingfenNumber"
-                          disabled
-                          show-score
-                          text-color="#ff9900">
-                        </el-rate>
-                        <span v-else>暂无评分</span>
-                      </template>
-                    </el-table-column>
-
                     <el-table-column width="300" :align="contents.tableAlign"
                                      header-align="center"
                                      label="操作">
