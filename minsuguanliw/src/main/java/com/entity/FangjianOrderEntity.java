@@ -123,13 +123,6 @@ public class FangjianOrderEntity<T> implements Serializable {
 
 
     /**
-     * 居住天数（有预约时间的订单使用，1-3天）
-     */
-    @TableField(value = "live_days")
-    private Integer liveDays;
-
-
-    /**
      * 设置：主键
      */
     public Integer getId() {
@@ -249,19 +242,7 @@ public class FangjianOrderEntity<T> implements Serializable {
         this.expireTime = expireTime;
     }
 
-    /**
-	 * 设置：居住天数
-	 */
-    public Integer getLiveDays() {
-        return liveDays;
-    }
-    
-    /**
-	 * 获取：居住天数
-	 */
-    public void setLiveDays(Integer liveDays) {
-        this.liveDays = liveDays;
-    }
+
 
     @Override
     public String toString() {
