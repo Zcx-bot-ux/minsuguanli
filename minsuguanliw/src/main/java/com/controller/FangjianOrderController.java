@@ -330,10 +330,14 @@ public class FangjianOrderController {
             
             // 处理预约时间逻辑
             if(fangjianOrder.getFangjianOrderTime() == null){
-                // 未输入预约时间，设置5天有效期
+                // 未输入预约时间，设置5天有效期（过期时间设为5天后凌晨4:30）
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
-                calendar.add(Calendar.DAY_OF_MONTH, 5);
+                calendar.add(Calendar.DAY_OF_MONTH, 5); // 加5天
+                calendar.set(Calendar.HOUR_OF_DAY, 4);  // 设置小时为4点
+                calendar.set(Calendar.MINUTE, 30);      // 设置分钟为30分
+                calendar.set(Calendar.SECOND, 0);       // 设置秒为0
+                calendar.set(Calendar.MILLISECOND, 0);  // 设置毫秒为0
                 fangjianOrder.setExpireTime(calendar.getTime());
             } else {
                 // 有预约时间，根据当前时间与预约时间关系设置状态
@@ -565,102 +569,17 @@ public class FangjianOrderController {
         return "DD" + dateStr + randomNum;
     }
 
-    /**
-     * 定时任务：检查过期订单并自动退款
-     * 每天凌晨执行
-     */
-    @RequestMapping("/autoRefundExpiredOrders")
-    @Transactional
-    public R autoRefundExpiredOrders(){
-        logger.debug("autoRefundExpiredOrders方法:,,Controller:{}",this.getClass().getName());
-        
-        // 查询所有已支付且有过期时间的订单
-        Wrapper<FangjianOrderEntity> wrapper = new EntityWrapper<FangjianOrderEntity>()
-            .eq("fangjian_order_types", 1) // 已支付状态
-            .isNotNull("expire_time")
-            .lt("expire_time", new Date()); // 过期时间小于当前时间
-        
-        List<FangjianOrderEntity> expiredOrders = fangjianOrderService.selectList(wrapper);
-        
-        int refundCount = 0;
-        for(FangjianOrderEntity order : expiredOrders){
-            try {
-                // 执行退款逻辑
-                FangjianEntity fangjianEntity = fangjianService.selectById(order.getFangjianId());
-                YonghuEntity yonghuEntity = yonghuService.selectById(order.getYonghuId());
-                
-                if(fangjianEntity != null && yonghuEntity != null){
-                    Double money = fangjianEntity.getFangjianMoney();
-                    yonghuEntity.setNewMoney(yonghuEntity.getNewMoney() + money);
-                    yonghuService.updateById(yonghuEntity);
-                    
-                    order.setFangjianOrderTypes(2); // 设置为退款状态
-                    fangjianOrderService.updateById(order);
-                    
-                    // 自动退款，恢复房间数量
-                    fangjianEntity.setFangjianNumber(fangjianEntity.getFangjianNumber() + 1);
-                    fangjianService.updateById(fangjianEntity);
-                    
-                    refundCount++;
-                }
-            } catch (Exception e) {
-                logger.error("自动退款失败，订单ID: " + order.getId(), e);
-            }
-        }
-        
-        return R.ok().put("data", "成功退款" + refundCount + "个过期订单");
-    }
 
     /**
-     * 定时任务：更新订单状态（进行中、已完成）
-     * 每天凌晨执行
+     * 定时任务：更新订单状态（2个方法）
      */
     @RequestMapping("/autoUpdateOrderStatus")
     public R autoUpdateOrderStatus(){
         logger.debug("autoUpdateOrderStatus方法:,,Controller:{}",this.getClass().getName());
-        
-        Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        int updateCount = 0;
-        
-        try {
-            Date nowDate = sdf.parse(sdf.format(now));
-            
-            // 1. 将已支付且预约时间为今天的订单更新为进行中
-            Wrapper<FangjianOrderEntity> wrapper1 = new EntityWrapper<FangjianOrderEntity>()
-                .eq("fangjian_order_types", 1)
-                .isNotNull("fangjian_order_time");
-            
-            List<FangjianOrderEntity> list1 = fangjianOrderService.selectList(wrapper1);
-            for(FangjianOrderEntity order : list1){
-                Date orderDate = sdf.parse(sdf.format(order.getFangjianOrderTime()));
-                if(nowDate.compareTo(orderDate) == 0){
-                    order.setFangjianOrderTypes(5); // 进行中
-                    fangjianOrderService.updateById(order);
-                    updateCount++;
-                }
-            }
-            
-            // 2. 将进行中的订单，如果预约时间已过，更新为已完成
-            Wrapper<FangjianOrderEntity> wrapper2 = new EntityWrapper<FangjianOrderEntity>()
-                .eq("fangjian_order_types", 5);
-            
-            List<FangjianOrderEntity> list2 = fangjianOrderService.selectList(wrapper2);
-            for(FangjianOrderEntity order : list2){
-                Date orderDate = sdf.parse(sdf.format(order.getFangjianOrderTime()));
-                if(nowDate.after(orderDate)){
-                    order.setFangjianOrderTypes(3); // 已完成
-                    fangjianOrderService.updateById(order);
-                    updateCount++;
-                }
-            }
-            
-        } catch (Exception e) {
-            logger.error("自动更新订单状态出错", e);
-            return R.error(511,"自动更新失败");
-        }
-        
-        return R.ok().put("data", "成功更新" + updateCount + "个订单状态");
+        int refundCount = fangjianOrderService.autoRefundExpiredOrders();
+        int updateCount = fangjianOrderService.autoUpdateOrderStatus();
+        int num = refundCount+updateCount;
+        return R.ok().put("data", "成功更新" + num + "个订单状态");
     }
 
 }

@@ -114,7 +114,7 @@ public class FangjianOrderEntity<T> implements Serializable {
 
 
     /**
-     * 订单过期时间（用于无预约时间的订单，5天有效期）
+     * 订单过期时间（用于无预约时间的订单，5天有效期；有预约时间的订单为退房时间）
      */
     @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
@@ -123,8 +123,15 @@ public class FangjianOrderEntity<T> implements Serializable {
 
 
     /**
-	 * 设置：主键
-	 */
+     * 居住天数（有预约时间的订单使用，1-3天）
+     */
+    @TableField(value = "live_days")
+    private Integer liveDays;
+
+
+    /**
+     * 设置：主键
+     */
     public Integer getId() {
         return id;
     }
@@ -240,6 +247,20 @@ public class FangjianOrderEntity<T> implements Serializable {
 	 */
     public void setExpireTime(Date expireTime) {
         this.expireTime = expireTime;
+    }
+
+    /**
+	 * 设置：居住天数
+	 */
+    public Integer getLiveDays() {
+        return liveDays;
+    }
+    
+    /**
+	 * 获取：居住天数
+	 */
+    public void setLiveDays(Integer liveDays) {
+        this.liveDays = liveDays;
     }
 
     @Override

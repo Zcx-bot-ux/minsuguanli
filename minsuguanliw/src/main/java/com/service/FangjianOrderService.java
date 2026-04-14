@@ -16,4 +16,16 @@ public interface FangjianOrderService extends IService<FangjianOrderEntity> {
     * @return 带分页的查询出来的数据
     */
      PageUtils queryPage(Map<String, Object> params);
+     
+     /**
+      * 自动退款过期订单
+      * @return 退款的订单数量
+      */
+     int autoRefundExpiredOrders();
+     
+     /**
+      * 自动更新订单状态（进行中、已完成）
+      * @return 更新的订单数量
+      */
+     int autoUpdateOrderStatus();
 }

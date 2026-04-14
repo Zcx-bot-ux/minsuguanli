@@ -56,6 +56,14 @@
                         >删除</el-button>
                         &nbsp;
                         <el-button
+                                v-if="role == '管理员'"
+                                type="warning"
+                                icon="el-icon-refresh"
+                                @click="refreshStatus()"
+                        >刷新</el-button>
+                        &nbsp;
+
+                        <el-button
                                 v-if="isAuth('fangjianOrder','报表')"
                                 type="success"
                                 icon="el-icon-pie-chart"
@@ -863,6 +871,32 @@
             // 导入功能上传文件失败后调用导入方法
             fangjianOrderUploadError(data){
                 this.$message.error('上传失败');
+            },
+            // 刷新订单状态（手动触发定时任务）
+            refreshStatus(){
+                this.$confirm(`确定要刷新订单状态吗?`, "提示", {
+                    confirmButtonText: "确定",
+                    cancelButtonText: "取消",
+                    type: "warning"
+                }).then(() => {
+                    this.$http({
+                        url: "fangjianOrder/autoUpdateOrderStatus",
+                        method: "get",
+                    }).then(({ data }) => {
+                        if (data && data.code === 0) {
+                            this.$message({
+                                message: data.data || "刷新成功",
+                                type: "success",
+                                duration: 1500,
+                                onClose: () => {
+                                    this.search();
+                                }
+                            });
+                        } else {
+                            this.$message.error(data.msg || "刷新失败");
+                        }
+                    });
+                });
             },
             //退款
 			refund(id){
