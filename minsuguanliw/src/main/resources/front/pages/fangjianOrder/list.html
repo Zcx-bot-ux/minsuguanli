@@ -463,11 +463,17 @@
                             </td>
                             <td style="width: 80px;">{{item.fangjianValue}}</td>
                             <td style="width: 80px;">{{item.yonghuName}}</td>
-                            <td style="width: 120px;">{{item.fangjianOrderTime}}</td>
+                            <td style="width: 140px;">
+                                <span v-if="item.fangjianOrderTime">{{item.fangjianOrderTime}}</span>
+                                <span v-else-if="item.expireTime" style="color: #ff6600; font-size: 13px;">
+                                    有效期至:<br>{{formatDateTime(item.expireTime)}}
+                                </span>
+                                <span v-else>-</span>
+                            </td>
                             <td style="width: 120px;">{{item.fangjianOrderText}}</td>
                             <td style="width: 80px;">{{item.fangjianOrderValue}}</td>
                             <td style="width: 100px;">
-                                <button v-if="item.fangjianOrderTypes==1" @click="refund(item.id)" type="button" class="layui-btn layui-btn-sm layui-btn-radius layui-btn-warm">
+                                <button v-if="item.fangjianOrderTypes==1 && canRefund(item)" @click="refund(item.id)" type="button" class="layui-btn layui-btn-sm layui-btn-radius layui-btn-warm">
                                     <i class="layui-icon">&#xe65e;</i> 退款
                                 </button>
                                 <button v-if="item.fangjianOrderTypes==3" @click="openCommentModal(item)" type="button" class="layui-btn layui-btn-sm layui-btn-radius layui-btn-normal">
@@ -476,7 +482,12 @@
                                 <span v-if="item.fangjianOrderTypes==4" style="color: #5FB878; font-size: 12px;">
                                     <i class="layui-icon">&#xe605;</i> 已评价
                                 </span>
-
+                                <span v-if="item.fangjianOrderTypes==1 && !canRefund(item)" style="color: #ff6600; font-size: 12px;">
+                                    <i class="layui-icon">&#xe65e;</i> <已过期></已过期>
+                                </span>
+                                <span v-if="item.fangjianOrderTypes==2" style="color: #999; font-size: 12px;">
+                                    <i class="layui-icon">&#xe65e;</i> 已退款
+                                </span>
                             </td>
                         </tr>
                         </tbody>
@@ -583,6 +594,68 @@
         methods: {
             isAuth(tablename, button) {
                 return isFrontAuth(tablename, button);
+            }
+            // 日期时间格式化方法
+            ,formatDateTime(date) {
+                if (!date) return '';
+                // 如果是时间戳数字，转换为日期对象
+                if (typeof date === 'number') {
+                    date = new Date(date);
+                }
+                // 如果是字符串，尝试解析
+                if (typeof date === 'string') {
+                    // 检查是否为纯数字（时间戳字符串）
+                    if (/^\d+$/.test(date)) {
+                        date = new Date(parseInt(date));
+                    } else {
+                        // 尝试解析标准日期格式
+                        date = new Date(date.replace(/-/g, '/'));
+                    }
+                }
+                // 如果date不是Date对象，返回原值
+                if (!(date instanceof Date) || isNaN(date.getTime())) {
+                    return date;
+                }
+                // 格式化日期
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
+            // 判断是否可退款
+            ,canRefund(item) {
+                if (item.fangjianOrderTypes != 1) return false;
+
+                const now = new Date();
+
+                // 无预约时间，检查是否在有效期内
+                if (!item.fangjianOrderTime && item.expireTime) {
+                    let expireTime = item.expireTime;
+                    if (typeof expireTime === 'string') {
+                        if (/^\d+$/.test(expireTime)) {
+                            expireTime = new Date(parseInt(expireTime));
+                        } else {
+                            expireTime = new Date(expireTime.replace(/-/g, '/'));
+                        }
+                    } else if (typeof expireTime === 'number') {
+                        expireTime = new Date(expireTime);
+                    }
+                    return now < expireTime;
+                }
+
+                // 有预约时间，检查当前时间是否小于预约时间
+                if (item.fangjianOrderTime) {
+                    let orderTime = new Date(item.fangjianOrderTime.replace(/-/g, '/'));
+                    // 只比较日期部分
+                    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const orderDate = new Date(orderTime.getFullYear(), orderTime.getMonth(), orderTime.getDate());
+                    return nowDate < orderDate;
+                }
+
+                return true;
             }
             ,jump(url) {
                 jump(url);

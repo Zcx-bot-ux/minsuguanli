@@ -68,6 +68,13 @@ public class FangjianOrderModel implements Serializable {
 
 
     /**
+     * 订单过期时间
+     */
+    @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+	@DateTimeFormat
+    private Date expireTime;
+
+	/**
 	 * 获取：主键
 	 */
     public Integer getId() {
@@ -166,4 +173,19 @@ public class FangjianOrderModel implements Serializable {
         this.createTime = createTime;
     }
 
+
+    /**
+	 * 设置：订单过期时间
+	 */
+    public Date getExpireTime() {
+        return expireTime;
     }
+    
+    /**
+	 * 获取：订单过期时间
+	 */
+    public void setExpireTime(Date expireTime) {
+        this.expireTime = expireTime;
+    }
+
+}

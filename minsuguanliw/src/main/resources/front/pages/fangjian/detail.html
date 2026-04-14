@@ -420,11 +420,9 @@
                                         </span>
                                         <span style="color: #ff6600; font-weight: bold; margin-left: 10px; font-size: 15px; vertical-align: middle;">{{item.pingfenNumber}}分</span>
                                     </div>
-                                    <!-- 调试信息：显示原始评分值 -->
-                                    <div v-else style="color: #999; font-size: 12px; margin: 5px 0;">
-                                        [调试] 评分值: {{item.pingfenNumber}}
-                                    </div>
+
                                     <p style="margin-top: 8px; color: #333; line-height: 1.6; font-size: 14px;">{{item.fangjianLiuyanText}}</p>
+
                                 </div>
                                 <p v-if="item.replyText != null && item.replyText != ''"
                                    style="font-size: 12px; color: #666; margin-top: 10px; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #1890ff;">

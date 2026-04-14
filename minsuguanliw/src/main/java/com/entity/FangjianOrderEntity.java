@@ -110,8 +110,16 @@ public class FangjianOrderEntity<T> implements Serializable {
     @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat
     @TableField(value = "create_time",fill = FieldFill.INSERT)
-
     private Date createTime;
+
+
+    /**
+     * 订单过期时间（用于无预约时间的订单，5天有效期）
+     */
+    @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @TableField(value = "expire_time")
+    private Date expireTime;
 
 
     /**
@@ -219,6 +227,21 @@ public class FangjianOrderEntity<T> implements Serializable {
         this.createTime = createTime;
     }
 
+
+    /**
+	 * 设置：订单过期时间
+	 */
+    public Date getExpireTime() {
+        return expireTime;
+    }
+    
+    /**
+	 * 获取：订单过期时间
+	 */
+    public void setExpireTime(Date expireTime) {
+        this.expireTime = expireTime;
+    }
+
     @Override
     public String toString() {
         return "FangjianOrder{" +
@@ -230,6 +253,7 @@ public class FangjianOrderEntity<T> implements Serializable {
             ", fangjianOrderText=" + fangjianOrderText +
             ", fangjianOrderTypes=" + fangjianOrderTypes +
             ", createTime=" + createTime +
+            ", expireTime=" + expireTime +
         "}";
     }
 }

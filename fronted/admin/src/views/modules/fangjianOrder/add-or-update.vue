@@ -103,7 +103,11 @@
                         <el-form-item v-if="ruleForm.fangjianOrderTime" label="预约日期" prop="fangjianOrderTime">
                             <span v-html="ruleForm.fangjianOrderTime"></span>
                         </el-form-item>
+                        <el-form-item v-else-if="ruleForm.expireTime" label="有效期至" prop="expireTime">
+                            <span style="color: #ff6600;" v-html="formatDate(ruleForm.expireTime)"></span>
+                        </el-form-item>
                     </div>
+
                 </el-col>
 
                 <el-col :span="24">
@@ -257,6 +261,31 @@
         mounted() {
         },
         methods: {
+            // 日期格式化方法
+            formatDate(date) {
+                if (!date) return '';
+                // 如果是时间戳数字，转换为日期对象
+                if (typeof date === 'number') {
+                    date = new Date(date);
+                }
+                // 如果是字符串，尝试解析
+                if (typeof date === 'string') {
+                    // 检查是否为纯数字（时间戳字符串）
+                    if (/^\d+$/.test(date)) {
+                        date = new Date(parseInt(date));
+                    } else {
+                        return date; // 已经是格式化后的字符串
+                    }
+                }
+                // 格式化日期
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            },
             // 下载
             download(file){
                 window.open(`${file}`)

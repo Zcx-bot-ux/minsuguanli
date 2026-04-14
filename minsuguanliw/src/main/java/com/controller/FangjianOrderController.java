@@ -297,7 +297,10 @@ public class FangjianOrderController {
 
 
     /**
-    * 前端保存
+    * 前端保存（下单）
+    * 逻辑：
+    * 1. 预约时间可为空，为空时设置5天有效期
+    * 2. 有预约时间时，当前时间<预约时间可退款，当前时间>=预约时间不可退款
     */
     @RequestMapping("/add")
     public R add(@RequestBody FangjianOrderEntity fangjianOrder, HttpServletRequest request){
@@ -306,13 +309,7 @@ public class FangjianOrderController {
             if(fangjianEntity == null){
                 return R.error(511,"查不到该房间信息");
             }
-            // Double fangjianNewMoney = fangjianEntity.getFangjianMoney();
 
-            if(false){
-            }
-
-            //计算所获得积分
-            Double buyJifen =0.0;
             Integer userId = (Integer) request.getSession().getAttribute("userId");
             YonghuEntity yonghuEntity = yonghuService.selectById(userId);
             if(yonghuEntity == null)
@@ -322,19 +319,62 @@ public class FangjianOrderController {
             double balance = yonghuEntity.getNewMoney() - fangjianEntity.getFangjianMoney()*1;//余额
             if(balance<0)
                 return R.error(511,"余额不够支付");
-            fangjianOrder.setFangjianOrderTypes(1); //设置订单状态为已支付
-            fangjianOrder.setYonghuId(userId); //设置订单支付人id
+            
+            // 设置订单状态为已支付
+            fangjianOrder.setFangjianOrderTypes(1);
+            fangjianOrder.setYonghuId(userId);
             fangjianOrder.setCreateTime(new Date());
+            
             // 生成订单编号
             fangjianOrder.setOrderNo(generateOrderNo());
-                fangjianOrderService.insert(fangjianOrder);//新增订单
-            yonghuEntity.setNewMoney(balance);//设置金额
+            
+            // 处理预约时间逻辑
+            if(fangjianOrder.getFangjianOrderTime() == null){
+                // 未输入预约时间，设置5天有效期
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.add(Calendar.DAY_OF_MONTH, 5);
+                fangjianOrder.setExpireTime(calendar.getTime());
+            } else {
+                // 有预约时间，根据当前时间与预约时间关系设置状态
+                Date now = new Date();
+                Date orderTime = fangjianOrder.getFangjianOrderTime();
+                
+                // 去掉时间部分，只比较日期
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                try {
+                    Date nowDate = sdf.parse(sdf.format(now));
+                    Date orderDate = sdf.parse(sdf.format(orderTime));
+                    
+                    if(nowDate.compareTo(orderDate) == 0){
+                        // 今天等于预约日期，状态变为进行中
+                        fangjianOrder.setFangjianOrderTypes(5);
+                    } else if(nowDate.after(orderDate)){
+                        // 今天大于预约日期，状态变为已完成
+                        fangjianOrder.setFangjianOrderTypes(3);
+                    }
+                    // 今天小于预约日期，保持已支付状态
+                } catch (Exception e) {
+                    logger.error("日期比较出错", e);
+                }
+            }
+            
+            fangjianOrderService.insert(fangjianOrder);
+            yonghuEntity.setNewMoney(balance);
             yonghuService.updateById(yonghuEntity);
+            
+            // 支付成功，房间数量减一
+            fangjianEntity.setFangjianNumber(fangjianEntity.getFangjianNumber() - 1);
+            fangjianService.updateById(fangjianEntity);
+            
             return R.ok();
     }
 
     /**
     * 退款
+    * 逻辑：
+    * 1. 无预约时间（5天有效期）：有效期内可退款，过期不可退
+    * 2. 有预约时间：当前时间<预约时间可退款，当前时间>=预约时间不可退款
     */
     @RequestMapping("/refund")
     public R refund(Integer id, HttpServletRequest request){
@@ -342,8 +382,43 @@ public class FangjianOrderController {
         String role = String.valueOf(request.getSession().getAttribute("role"));
 
             FangjianOrderEntity fangjianOrder = fangjianOrderService.selectById(id);
-            Integer buyNumber = 1;
-            Integer fangjianOrderPaymentTypes = 1;
+            if(fangjianOrder == null){
+                return R.error(511,"订单不存在");
+            }
+            
+            // 判断是否可以退款
+            Date now = new Date();
+            boolean canRefund = false;
+            
+            if(fangjianOrder.getFangjianOrderTime() == null){
+                // 无预约时间，检查是否在5天有效期内
+                if(fangjianOrder.getExpireTime() != null && now.before(fangjianOrder.getExpireTime())){
+                    canRefund = true;
+                } else {
+                    return R.error(511,"订单已过期，无法退款");
+                }
+            } else {
+                // 有预约时间，检查当前时间是否小于预约时间
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                try {
+                    Date nowDate = sdf.parse(sdf.format(now));
+                    Date orderDate = sdf.parse(sdf.format(fangjianOrder.getFangjianOrderTime()));
+                    
+                    if(nowDate.before(orderDate)){
+                        canRefund = true;
+                    } else {
+                        return R.error(511,"预约时间已到或已过，无法退款");
+                    }
+                } catch (Exception e) {
+                    logger.error("日期比较出错", e);
+                    return R.error(511,"退款判断出错");
+                }
+            }
+            
+            if(!canRefund){
+                return R.error(511,"当前状态不允许退款");
+            }
+
             Integer fangjianId = fangjianOrder.getFangjianId();
             if(fangjianId == null)
                 return R.error(511,"查不到该房间信息");
@@ -361,38 +436,38 @@ public class FangjianOrderController {
             if(yonghuEntity.getNewMoney() == null)
                 return R.error(511,"用户金额不能为空");
 
-            Double zhekou = 1.0;
-
-
-            //判断是什么支付方式 1代表余额 2代表积分
-            if(fangjianOrderPaymentTypes == 1){//余额支付
-                //计算金额
-                Double money = fangjianEntity.getFangjianMoney() * buyNumber  * zhekou;
-                //计算所获得积分
-                Double buyJifen = 0.0;
-                yonghuEntity.setNewMoney(yonghuEntity.getNewMoney() + money); //设置金额
-
-
-            }
+            // 余额支付退款
+            Double money = fangjianEntity.getFangjianMoney();
+            yonghuEntity.setNewMoney(yonghuEntity.getNewMoney() + money);
 
             fangjianOrder.setFangjianOrderTypes(2);//设置订单状态为退款
-            fangjianOrderService.updateById(fangjianOrder);//根据id更新
-            yonghuService.updateById(yonghuEntity);//更新用户信息
-            fangjianService.updateById(fangjianEntity);//更新订单中房间信息的信息
+            fangjianOrderService.updateById(fangjianOrder);
+            yonghuService.updateById(yonghuEntity);
+            
+            // 退款成功，房间数量加一
+            fangjianEntity.setFangjianNumber(fangjianEntity.getFangjianNumber() + 1);
+            fangjianService.updateById(fangjianEntity);
+            
             return R.ok();
     }
 
 
     /**
-     * 发货
+     * 完成订单（管理员使用）
+     * 逻辑：管理员点击完成，将预约时间更新为当天，状态变为进行中
      */
     @RequestMapping("/deliver")
     public R deliver(Integer id ){
-        logger.debug("refund:,,Controller:{},,ids:{}",this.getClass().getName(),id.toString());
-        FangjianOrderEntity  fangjianOrderEntity = new  FangjianOrderEntity();;
-        fangjianOrderEntity.setId(id);
-        fangjianOrderEntity.setFangjianOrderTypes(3);
-        boolean b =  fangjianOrderService.updateById( fangjianOrderEntity);
+        logger.debug("deliver方法:,,Controller:{},,id:{}",this.getClass().getName(),id.toString());
+        FangjianOrderEntity fangjianOrderEntity = fangjianOrderService.selectById(id);
+        if(fangjianOrderEntity == null){
+            return R.error(511,"订单不存在");
+        }
+        
+        // 更新预约时间为当天，状态变为进行中
+        fangjianOrderEntity.setFangjianOrderTime(new Date());
+        fangjianOrderEntity.setFangjianOrderTypes(5);  // 进行中，第二天自动变已完成
+        boolean b = fangjianOrderService.updateById(fangjianOrderEntity);
         if(!b){
             return R.error("操作出错");
         }
@@ -490,11 +565,102 @@ public class FangjianOrderController {
         return "DD" + dateStr + randomNum;
     }
 
+    /**
+     * 定时任务：检查过期订单并自动退款
+     * 每天凌晨执行
+     */
+    @RequestMapping("/autoRefundExpiredOrders")
+    @Transactional
+    public R autoRefundExpiredOrders(){
+        logger.debug("autoRefundExpiredOrders方法:,,Controller:{}",this.getClass().getName());
+        
+        // 查询所有已支付且有过期时间的订单
+        Wrapper<FangjianOrderEntity> wrapper = new EntityWrapper<FangjianOrderEntity>()
+            .eq("fangjian_order_types", 1) // 已支付状态
+            .isNotNull("expire_time")
+            .lt("expire_time", new Date()); // 过期时间小于当前时间
+        
+        List<FangjianOrderEntity> expiredOrders = fangjianOrderService.selectList(wrapper);
+        
+        int refundCount = 0;
+        for(FangjianOrderEntity order : expiredOrders){
+            try {
+                // 执行退款逻辑
+                FangjianEntity fangjianEntity = fangjianService.selectById(order.getFangjianId());
+                YonghuEntity yonghuEntity = yonghuService.selectById(order.getYonghuId());
+                
+                if(fangjianEntity != null && yonghuEntity != null){
+                    Double money = fangjianEntity.getFangjianMoney();
+                    yonghuEntity.setNewMoney(yonghuEntity.getNewMoney() + money);
+                    yonghuService.updateById(yonghuEntity);
+                    
+                    order.setFangjianOrderTypes(2); // 设置为退款状态
+                    fangjianOrderService.updateById(order);
+                    
+                    // 自动退款，恢复房间数量
+                    fangjianEntity.setFangjianNumber(fangjianEntity.getFangjianNumber() + 1);
+                    fangjianService.updateById(fangjianEntity);
+                    
+                    refundCount++;
+                }
+            } catch (Exception e) {
+                logger.error("自动退款失败，订单ID: " + order.getId(), e);
+            }
+        }
+        
+        return R.ok().put("data", "成功退款" + refundCount + "个过期订单");
+    }
 
-
-
-
-
-
+    /**
+     * 定时任务：更新订单状态（进行中、已完成）
+     * 每天凌晨执行
+     */
+    @RequestMapping("/autoUpdateOrderStatus")
+    public R autoUpdateOrderStatus(){
+        logger.debug("autoUpdateOrderStatus方法:,,Controller:{}",this.getClass().getName());
+        
+        Date now = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        int updateCount = 0;
+        
+        try {
+            Date nowDate = sdf.parse(sdf.format(now));
+            
+            // 1. 将已支付且预约时间为今天的订单更新为进行中
+            Wrapper<FangjianOrderEntity> wrapper1 = new EntityWrapper<FangjianOrderEntity>()
+                .eq("fangjian_order_types", 1)
+                .isNotNull("fangjian_order_time");
+            
+            List<FangjianOrderEntity> list1 = fangjianOrderService.selectList(wrapper1);
+            for(FangjianOrderEntity order : list1){
+                Date orderDate = sdf.parse(sdf.format(order.getFangjianOrderTime()));
+                if(nowDate.compareTo(orderDate) == 0){
+                    order.setFangjianOrderTypes(5); // 进行中
+                    fangjianOrderService.updateById(order);
+                    updateCount++;
+                }
+            }
+            
+            // 2. 将进行中的订单，如果预约时间已过，更新为已完成
+            Wrapper<FangjianOrderEntity> wrapper2 = new EntityWrapper<FangjianOrderEntity>()
+                .eq("fangjian_order_types", 5);
+            
+            List<FangjianOrderEntity> list2 = fangjianOrderService.selectList(wrapper2);
+            for(FangjianOrderEntity order : list2){
+                Date orderDate = sdf.parse(sdf.format(order.getFangjianOrderTime()));
+                if(nowDate.after(orderDate)){
+                    order.setFangjianOrderTypes(3); // 已完成
+                    fangjianOrderService.updateById(order);
+                    updateCount++;
+                }
+            }
+            
+        } catch (Exception e) {
+            logger.error("自动更新订单状态出错", e);
+            return R.error(511,"自动更新失败");
+        }
+        
+        return R.ok().put("data", "成功更新" + updateCount + "个订单状态");
+    }
 
 }

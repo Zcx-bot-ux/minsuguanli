@@ -23,7 +23,11 @@ public class FangjianOrderView extends FangjianOrderEntity implements Serializab
 		*/
 		private String fangjianOrderValue;
 
-
+		//当前表 fangjian_order
+			/**
+			* 订单编号
+			*/
+			private String orderNo;
 
 		//级联表 fangjian
 			/**
@@ -128,11 +132,6 @@ public class FangjianOrderView extends FangjianOrderEntity implements Serializab
 			public void setFangjianOrderValue(String fangjianOrderValue) {
 				this.fangjianOrderValue = fangjianOrderValue;
 			}
-
-
-
-
-
 
 
 				//级联表的get和set fangjian

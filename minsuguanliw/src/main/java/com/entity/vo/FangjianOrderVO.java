@@ -74,12 +74,19 @@ public class FangjianOrderVO implements Serializable {
      */
     @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat
-
     @TableField(value = "create_time")
     private Date createTime;
 
 
     /**
+     * 订单过期时间
+     */
+    @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+	@DateTimeFormat
+    @TableField(value = "expire_time")
+    private Date expireTime;
+
+	/**
 	 * 设置：主键
 	 */
     public Integer getId() {
@@ -178,11 +185,25 @@ public class FangjianOrderVO implements Serializable {
 
 
     /**
-	 * 获取：创建时间
+	 * 设置：创建时间
 	 */
-
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+
+    /**
+	 * 设置：订单过期时间
+	 */
+    public Date getExpireTime() {
+        return expireTime;
+    }
+    
+    /**
+	 * 获取：订单过期时间
+	 */
+    public void setExpireTime(Date expireTime) {
+        this.expireTime = expireTime;
     }
 
 }

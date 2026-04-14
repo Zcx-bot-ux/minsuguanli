@@ -155,7 +155,11 @@
                                    header-align="center"
                                    label="预约日期">
                         <template slot-scope="scope">
-                            {{scope.row.fangjianOrderTime}}
+                            <span v-if="scope.row.fangjianOrderTime">{{scope.row.fangjianOrderTime}}</span>
+                            <span v-else-if="scope.row.expireTime" style="color: #ff6600;">
+                                有效期至: {{formatDate(scope.row.expireTime)}}
+                            </span>
+                            <span v-else>-</span>
                         </template>
                     </el-table-column>
                     <el-table-column  :sortable="contents.tableSortable" :align="contents.tableAlign"
@@ -343,12 +347,32 @@
                 return val.replace(/<[^>]*>/g).replace(/undefined/g,'');
             }
         },
-        components: {
-            AddOrUpdate,
-        },
-        computed: {
-        },
         methods: {
+            // 日期格式化方法
+            formatDate(date) {
+                if (!date) return '';
+                // 如果是时间戳数字，转换为日期对象
+                if (typeof date === 'number') {
+                    date = new Date(date);
+                }
+                // 如果是字符串，尝试解析
+                if (typeof date === 'string') {
+                    // 检查是否为纯数字（时间戳字符串）
+                    if (/^\d+$/.test(date)) {
+                        date = new Date(parseInt(date));
+                    } else {
+                        return date; // 已经是格式化后的字符串
+                    }
+                }
+                // 格式化日期
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            },
             chartDialog() {
                 let _this = this;
                 let params = {
