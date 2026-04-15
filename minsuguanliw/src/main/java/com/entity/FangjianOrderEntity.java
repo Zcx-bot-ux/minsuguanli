@@ -123,6 +123,13 @@ public class FangjianOrderEntity<T> implements Serializable {
 
 
     /**
+     * 居住天数（1-5天，有预约时间时填写）
+     */
+    @TableField(value = "stay_days")
+    private Integer stayDays;
+
+
+    /**
      * 设置：主键
      */
     public Integer getId() {
@@ -243,6 +250,20 @@ public class FangjianOrderEntity<T> implements Serializable {
     }
 
 
+    /**
+     * 设置：居住天数
+     */
+    public Integer getStayDays() {
+        return stayDays;
+    }
+    
+    /**
+	 * 获取：居住天数
+	 */
+    public void setStayDays(Integer stayDays) {
+        this.stayDays = stayDays;
+    }
+
 
     @Override
     public String toString() {
@@ -256,6 +277,7 @@ public class FangjianOrderEntity<T> implements Serializable {
             ", fangjianOrderTypes=" + fangjianOrderTypes +
             ", createTime=" + createTime +
             ", expireTime=" + expireTime +
+            ", stayDays=" + stayDays +
         "}";
     }
 }

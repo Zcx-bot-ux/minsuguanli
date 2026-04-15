@@ -51,10 +51,11 @@ public class FangjianOrderServiceImpl extends ServiceImpl<FangjianOrderDao, Fang
 
     @Override
     public int autoRefundExpiredOrders() {
-        // 查询所有已支付且有过期时间的订单
+        // 查询所有已支付且有过期时间的订单（只处理无预约时间的订单）
         Wrapper<FangjianOrderEntity> wrapper = new EntityWrapper<FangjianOrderEntity>()
             .eq("fangjian_order_types", 1) // 已支付状态
             .isNotNull("expire_time")
+            .isNull("fangjian_order_time")  // 只处理无预约时间的订单
             .lt("expire_time", new Date()); // 过期时间小于当前时间
         
         List<FangjianOrderEntity> expiredOrders = this.selectList(wrapper);
@@ -112,14 +113,15 @@ public class FangjianOrderServiceImpl extends ServiceImpl<FangjianOrderDao, Fang
                 }
             }
             
-            // 2. 将进行中的订单，如果预约时间已过，更新为已完成
+            // 2. 将进行中的订单，如果已过退房时间（expire_time），更新为已完成
             Wrapper<FangjianOrderEntity> wrapper2 = new EntityWrapper<FangjianOrderEntity>()
-                .eq("fangjian_order_types", 5);
+                .eq("fangjian_order_types", 5)
+                .isNotNull("fangjian_order_time");  // 只处理有预约时间的订单
             
             List<FangjianOrderEntity> list2 = this.selectList(wrapper2);
             for(FangjianOrderEntity order : list2){
-                Date orderDate = sdf.parse(sdf.format(order.getFangjianOrderTime()));
-                if(nowDate.after(orderDate)){
+                // 判断是否已过退房时间
+                if(order.getExpireTime() != null && now.after(order.getExpireTime())){
                     order.setFangjianOrderTypes(3); // 已完成
                     this.updateById(order);
                     

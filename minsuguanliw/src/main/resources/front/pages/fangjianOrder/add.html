@@ -230,6 +230,40 @@
                            autocomplete="off">
                 </div>
             </div>
+
+            <!-- 居住天数选择（选择预约日期后显示） -->
+            <div class="layui-form-item main_borderColor" id="stayDaysItem" style="display: none;"
+                 :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 0 10px 0","backgroundColor":"rgba(255, 255, 255, 0)","borderRadius":"1px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
+                <label :style='{"width":"110px","borderColor": "rgba(255, 255, 255, 0)","padding":"0 12px 0 0","backgroundColor":"rgba(255, 255, 255, 0)","fontSize":"15px","color":"#333","textAlign":"left"}'
+                       class="layui-form-label">
+                    居住天数：
+                </label>
+                <div class="layui-input-block">
+                    <select class="layui-input main_borderColor" name="stayDays" id="stayDays" lay-filter="stayDays"
+                           :style='{"padding":"0 12px","boxShadow":"0 0 0px rgba(160, 67, 26, 1)","backgroundColor":"#fff","color":"rgba(135, 206, 250, 1)","borderRadius":"4px","textAlign":"left","borderWidth":"1px","fontSize":"15px","borderStyle":"solid","height":"40px"}'>
+                        <option value="">请选择居住天数</option>
+                        <option value="1">1天</option>
+                        <option value="2">2天</option>
+                        <option value="3">3天</option>
+                        <option value="4">4天</option>
+                        <option value="5">5天</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- 显示预计退房时间 -->
+            <div class="layui-form-item main_borderColor" id="checkOutTimeItem" style="display: none;"
+                 :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 0 10px 0","backgroundColor":"rgba(255, 255, 255, 0)","borderRadius":"1px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
+                <label :style='{"width":"110px","borderColor": "rgba(255, 255, 255, 0)","padding":"0 12px 0 0","backgroundColor":"rgba(255, 255, 255, 0)","fontSize":"15px","color":"#333","textAlign":"left"}'
+                       class="layui-form-label">
+                    预计退房：
+                </label>
+                <div class="layui-input-block">
+                    <input class="layui-input main_borderColor" id="checkOutTimeDisplay" readonly
+                           :style='{"padding":"0 12px","boxShadow":"0 0 0px rgba(160, 67, 26, 1)","backgroundColor":"#f5f5f5","color":"#ff6600","borderRadius":"4px","textAlign":"left","borderWidth":"1px","fontSize":"15px","borderStyle":"solid","height":"40px"}'>
+                </div>
+            </div>
             <!-- text后缀 -->
             <div class="layui-form-item main_borderColor"
                  :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 0 10px 0","backgroundColor":"rgba(255, 255, 255, 0)","borderRadius":"1px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
@@ -432,23 +466,70 @@
     // 日期框初始化
     function dateTimePick() {
         var myDate = new Date();  //获取当前时间
-        /*
-            ,change: function(value, date, endDate){
-                value       得到日期生成的值，如：2017-08-18
-                date        得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
-                endDate     得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
-        */
+
         // 预约日期的开始时间和结束时间的效验及格式
         var fangjianOrderTime = layui.laydate.render({
             elem: '#fangjianOrderTime'
             , type: 'date'
             , min: myDate.toLocaleString()
-            , change: function (value, date, endDate) {
+            , done: function (value, date, endDate) {
+                // 选择完成后触发
                 vue.detail.fangjianOrderTime = value;
+                handleOrderTimeChange(value);
             }
+        });
+
+        // 使用 layui form 监听 select 变化（因为 form.render 会重新渲染）
+        layui.form.on('select(stayDays)', function(data){
+            updateCheckOutTime();
         });
     }
 
+    // 处理预约日期变化
+    function handleOrderTimeChange(value) {
+        // 如果选择了日期，显示居住天数选择
+        if (value) {
+            var stayDaysItem = document.getElementById('stayDaysItem');
+            var checkOutTimeItem = document.getElementById('checkOutTimeItem');
+            if (stayDaysItem) stayDaysItem.style.display = 'flex';
+            if (checkOutTimeItem) checkOutTimeItem.style.display = 'flex';
+            updateCheckOutTime();
+        } else {
+            var stayDaysItem = document.getElementById('stayDaysItem');
+            var checkOutTimeItem = document.getElementById('checkOutTimeItem');
+            var stayDays = document.getElementById('stayDays');
+            if (stayDaysItem) stayDaysItem.style.display = 'none';
+            if (checkOutTimeItem) checkOutTimeItem.style.display = 'none';
+            if (stayDays) stayDays.value = '';
+        }
+    }
+
+    // 更新预计退房时间显示
+    function updateCheckOutTime() {
+        var orderTime = document.getElementById('fangjianOrderTime').value;
+        var stayDays = document.getElementById('stayDays').value;
+        var checkOutDisplay = document.getElementById('checkOutTimeDisplay');
+
+        if (orderTime && stayDays && checkOutDisplay) {
+            var date = new Date(orderTime);
+            date.setDate(date.getDate() + parseInt(stayDays));
+            // 设置退房时间为早上5点（与后端定时任务时间一致）
+            date.setHours(5, 0, 0, 0);
+
+            // 格式化为：yyyy-MM-dd HH:mm:ss
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            var hours = String(date.getHours()).padStart(2, '0');
+            var minutes = String(date.getMinutes()).padStart(2, '0');
+            var seconds = String(date.getSeconds()).padStart(2, '0');
+
+            var checkOutStr = year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+            checkOutDisplay.value = checkOutStr;
+        } else if (checkOutDisplay) {
+            checkOutDisplay.value = '';
+        }
+    }
 
     // 订单状态的查询
     function fangjianOrderTypesSelect() {

@@ -300,7 +300,8 @@ public class FangjianOrderController {
     * 前端保存（下单）
     * 逻辑：
     * 1. 预约时间可为空，为空时设置5天有效期
-    * 2. 有预约时间时，当前时间<预约时间可退款，当前时间>=预约时间不可退款
+    * 2. 有预约时间时，必须选择居住天数（1-5天），expire_time为退房时间
+    * 3. 有预约时间时，当前时间<预约时间可退款，当前时间>=预约时间不可退款
     */
     @RequestMapping("/add")
     public R add(@RequestBody FangjianOrderEntity fangjianOrder, HttpServletRequest request){
@@ -316,7 +317,15 @@ public class FangjianOrderController {
                 return R.error(511,"用户不能为空");
             if(yonghuEntity.getNewMoney() == null)
                 return R.error(511,"用户金额不能为空");
-            double balance = yonghuEntity.getNewMoney() - fangjianEntity.getFangjianMoney()*1;//余额
+            
+            // 计算订单金额（有居住天数时，金额 = 房间单价 * 居住天数）
+            Integer stayDays = fangjianOrder.getStayDays();
+            double totalMoney = fangjianEntity.getFangjianMoney();
+            if (stayDays != null && stayDays > 0) {
+                totalMoney = fangjianEntity.getFangjianMoney() * stayDays;
+            }
+            
+            double balance = yonghuEntity.getNewMoney() - totalMoney;
             if(balance<0)
                 return R.error(511,"余额不够支付");
             
@@ -330,25 +339,44 @@ public class FangjianOrderController {
             
             // 处理预约时间逻辑
             if(fangjianOrder.getFangjianOrderTime() == null){
-                // 未输入预约时间，设置5天有效期（过期时间设为5天后凌晨4:30）
+                // ========== 无预约时间场景 ==========
+                // 设置5天有效期（过期时间设为5天后凌晨4:30）
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
                 calendar.add(Calendar.DAY_OF_MONTH, 5); // 加5天
                 calendar.set(Calendar.HOUR_OF_DAY, 4);  // 设置小时为4点
                 calendar.set(Calendar.MINUTE, 30);      // 设置分钟为30分
-                calendar.set(Calendar.SECOND, 0);       // 设置秒为0
-                calendar.set(Calendar.MILLISECOND, 0);  // 设置毫秒为0
+                calendar.set(Calendar.SECOND, 0);       
+                calendar.set(Calendar.MILLISECOND, 0);  
                 fangjianOrder.setExpireTime(calendar.getTime());
-            } else {
-                // 有预约时间，根据当前时间与预约时间关系设置状态
-                Date now = new Date();
-                Date orderTime = fangjianOrder.getFangjianOrderTime();
                 
-                // 去掉时间部分，只比较日期
+                // 无预约时间时，居住天数为空
+                fangjianOrder.setStayDays(1);
+                
+            } else {
+                // ========== 有预约时间场景 ==========
+                // 校验居住天数
+                if(stayDays == null || stayDays < 1 || stayDays > 5){
+                    return R.error(511,"请选择居住天数（1-5天）");
+                }
+                
+                // 计算退房时间（预约日期 + 居住天数）
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(fangjianOrder.getFangjianOrderTime());
+                calendar.add(Calendar.DAY_OF_MONTH, stayDays); // 加居住天数
+                calendar.set(Calendar.HOUR_OF_DAY, 5);  // 退房时间设为早上5点
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+                fangjianOrder.setExpireTime(calendar.getTime());
+                
+                // 根据当前时间与预约时间关系设置状态
+                Date now = new Date();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                
                 try {
                     Date nowDate = sdf.parse(sdf.format(now));
-                    Date orderDate = sdf.parse(sdf.format(orderTime));
+                    Date orderDate = sdf.parse(sdf.format(fangjianOrder.getFangjianOrderTime()));
                     
                     if(nowDate.compareTo(orderDate) == 0){
                         // 今天等于预约日期，状态变为进行中

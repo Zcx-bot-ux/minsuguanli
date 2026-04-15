@@ -170,6 +170,18 @@
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
+
+                    <el-table-column  :sortable="contents.tableSortable" :align="contents.tableAlign"
+                                      prop="stayDays"
+                                      header-align="center"
+                                      label="居住天数">
+                        <template slot-scope="scope">
+                            <span v-if="scope.row.stayDays">{{scope.row.stayDays}} 天</span>
+                            <span v-else-if="scope.row.fangjianOrderTime" style="color: #999;">未设置</span>
+                            <span v-else style="color: #999;">-</span>
+                        </template>
+                    </el-table-column>
+
                     <el-table-column  :sortable="contents.tableSortable" :align="contents.tableAlign"
                                       prop="fangjianOrderText"
                                       header-align="center"
@@ -322,6 +334,7 @@
                      '余额': 'newMoney',
                 //本表字段
                      '预约日期': "fangjianOrderTime",
+                     '居住天数': "stayDays",
                      '预约备注': "fangjianOrderText",
                      '订单状态': "fangjianOrderTypes",
             },
