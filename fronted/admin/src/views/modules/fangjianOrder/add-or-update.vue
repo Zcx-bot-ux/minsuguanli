@@ -228,8 +228,9 @@
             if (this.role != "管理员"){
             }
             this.addEditForm = styleJs.addStyle();
-            this.addEditStyleChange()
-            this.addEditUploadStyleChange()
+            // 样式初始化移到 init 方法中执行，确保DOM已渲染
+            // this.addEditStyleChange()
+            // this.addEditUploadStyleChange()
             //获取下拉框信息
                 this.$http({
                     url:`dictionary/page?page=1&limit=100&sort=&order=&dicCode=fangjian_order_types`,

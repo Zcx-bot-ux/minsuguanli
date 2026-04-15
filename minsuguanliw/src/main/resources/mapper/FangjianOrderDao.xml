@@ -13,6 +13,7 @@
         ,a.fangjian_order_types as fangjianOrderTypes
         ,a.create_time as createTime
         ,a.expire_time as expireTime
+        ,a.stay_days as stayDays
     </sql>
     <select id="selectListView" parameterType="map" resultType="com.entity.view.FangjianOrderView" >
         SELECT
